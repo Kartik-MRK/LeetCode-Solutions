@@ -43,38 +43,55 @@ The total cost is 6.
 
 # 🛍️ Min-Cost-Climbing-Stairs | Explained
 
-## Approach 1: Dynamic Programming Bottom-Up
+## Approach 1: Depth-First Search with Memoization
 ### Intuition
-The core idea behind this approach is to iterate through the stairs from bottom to top, at each step considering the minimum cost of reaching the current step by either climbing from the step below or the step below that. This dynamic programming strategy works because it breaks down the problem into smaller sub-problems and leverages the optimal solutions to these sub-problems to construct the overall optimal solution.
+The core idea behind this approach is to use a depth-first search strategy with memoization to efficiently explore all possible stair-climbing paths and calculate their minimum costs. This approach works by recursively exploring the minimum cost paths from each stair, storing the intermediate results to avoid redundant calculations.
+
 ### Algorithm Visualized
 ```mermaid
-graph LR
-    A[Start] -->|Initialize cost array|> B[Iterate from n-3 to 0]
-    B -->|At each step i, calculate cost[i] = cost[i] + min(cost[i+1], cost[i+2])|> C[Update cost array]
-    C -->|Return min(cost[0], cost[1])|> D[End]
+graph TD
+    A[Start] --> B{Choose Stair}
+    B --> C1[Stair 1: Cost + min(Cost of Stair 2, Cost of Stair 3)]
+    B --> C2[Stair 2: Cost + min(Cost of Stair 3, Cost of Stair 4)]
+    C1 --> D1{Base Case: Last Two Stairs}
+    C2 --> D2{Base Case: Last Two Stairs}
+    D1 --> E1[Return Minimum Cost]
+    D2 --> E2[Return Minimum Cost]
+    E1 --> F[Return Minimum Cost of Both Paths]
+    E2 --> F
 ```
+
 ### Approach
-The algorithm iterates through the stairs from the third step from the end to the first step, updating the cost of each step based on the minimum cost of reaching the next two steps. This approach ensures that the cost of reaching each step is optimized based on the costs of the subsequent steps.
+The algorithm starts at the beginning of the stairs and recursively explores two possible paths: climbing one stair or two stairs at a time. It calculates the minimum cost of each path by adding the current stair's cost to the minimum cost of the next two possible paths. This process continues until it reaches the base case, where it returns the minimum cost of the last two stairs. The algorithm uses memoization to store the intermediate results and avoid redundant calculations.
+
 ### Detailed Code Analysis
-- Line 1-2: The solution class and method are defined, with `minCostClimbingStairs` taking a list of integers `cost` as input and returning the minimum cost of reaching the top.
-- Line 3: The variable `mincost` is initialized with positive infinity, but it is not used in the computation.
-- Line 4: The length of the `cost` array is stored in the variable `n`.
-- Line 5-6: The loop iterates from the third step from the end to the first step. For each step `i`, the cost of reaching that step is updated by adding the minimum cost of reaching the next two steps (`cost[i+1]` and `cost[i+2]`).
-- Line 7: The minimum cost of reaching the top is the minimum cost of reaching the first or second step.
-- Line 8: The function returns this minimum cost.
+The code defines a recursive function `dfs` that takes a stair index `step` as input. It first checks if the stair index is out of bounds, in which case it returns 0. If the stair index is at the last two stairs, it returns the cost of that stair. If the result is already memoized, it returns the stored result. Otherwise, it calculates the minimum cost by recursively calling `dfs` for the next two stairs, adds the current stair's cost, and stores the result in the memoization array.
+
 ### Code
 ```python
 class Solution:
     def minCostClimbingStairs(self, cost: List[int]) -> int:
         n = len(cost)
-        for i in range(n-3, -1, -1):
-            cost[i] += min(cost[i+1], cost[i+2])
-        return min(cost[0], cost[1])
+        memo = [-1 for i in range(n + 1)]
+
+        def dfs(step):
+            if step >= n + 1:
+                return 0
+            if step >= n - 2:
+                return cost[step]
+            if memo[step] != -1:
+                return memo[step]
+
+            memo[step] = min(dfs(step + 1), dfs(step + 2)) + cost[step]
+            return memo[step]
+
+        return min(dfs(0), dfs(1))
 ```
+
 ### Complexity
-- **Time:** O(n), where n is the number of stairs. The algorithm iterates through the stairs once, performing a constant amount of work at each step.
-- **Space:** O(1), as the algorithm only uses a constant amount of space to store the variables `n`, `i`, and the updated costs in the `cost` array.
+- **Time:** O(n) because each stair is visited at most twice (once from the previous stair and once from the stair before that), and the recursive function has a memoization mechanism to avoid redundant calculations.
+- **Space:** O(n) because the algorithm uses a memoization array of size n + 1 to store the intermediate results.
 
 ## 🕵️‍♂️ Follow-up Questions (Optional)
-1. What if the input array is empty or contains only one element? The function should handle these edge cases by returning 0 or the single element's cost, respectively.
-2. How can this solution be generalized to handle more complex stair-climbing scenarios, such as varying step costs or additional constraints? The dynamic programming approach can be extended to accommodate these scenarios by modifying the recurrence relation and the state transition diagram accordingly.
+- What would happen if the input array is empty? The current implementation would throw an error, so you could add a check for an empty input array and return 0 in that case.
+- How would you optimize the algorithm if the input array is extremely large? You could use an iterative approach with a dynamic programming table to avoid the recursive function call overhead.
